@@ -38,6 +38,8 @@ namespace RestClient.Net.UnitTests
         #region Public Methods
         public async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, Func<HttpRequestMessage> httpRequestMessageFunc, Microsoft.Extensions.Logging.ILogger logger, CancellationToken cancellationToken)
         {
+            var released = false;
+
             try
             {
                 await _semaphoreSlim.WaitAsync();
@@ -56,6 +58,8 @@ namespace RestClient.Net.UnitTests
 
                 _semaphoreSlim.Release();
 
+                released = true;
+
                 return await httpClient.SendAsync(httpRequestMessage, cancellationToken);
             }
             catch (Exception ex)
@@ -64,6 +68,7 @@ namespace RestClient.Net.UnitTests
             }
             finally
             {
+                if(!released) _semaphoreSlim.Release();
             }
         }
         #endregion
