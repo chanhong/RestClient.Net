@@ -14,7 +14,6 @@ namespace RestClient.Net.UnitTests
     public class ManagedTokenSender
     {
         #region Fields
-        private string _bearerToken;
         private DateTime _tokenCreationTime;
         private SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
         private Func<DateTime, string> _refreshToken;
@@ -23,7 +22,7 @@ namespace RestClient.Net.UnitTests
         #endregion
 
         #region Public Properties
-        public string BearerToken => _bearerToken;
+        public string BearerToken { get; private set; }
         #endregion
 
         #region Constructor
@@ -44,13 +43,13 @@ namespace RestClient.Net.UnitTests
 
                 var newToken = _refreshToken(_tokenCreationTime);
 
-                if (string.Compare(newToken, _bearerToken) != 0) _tokenCreationTime = _getTime();
+                if (string.Compare(newToken, BearerToken) != 0) _tokenCreationTime = _getTime();
 
-                _bearerToken = newToken;
+                BearerToken = newToken;
 
                 var httpRequestMessage = httpRequestMessageFunc.Invoke();
 
-                httpRequestMessage.Headers.Add("Authorization", "Bearer " + _bearerToken);
+                httpRequestMessage.Headers.Add("Authorization", "Bearer " + BearerToken);
 
                 var response = await httpClient.SendAsync(httpRequestMessage, cancellationToken);
 
