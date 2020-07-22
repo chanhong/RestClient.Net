@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace RestClient.Net.UnitTests
 {
+    public delegate DateTime GetTime();
+
+
     public class ManagedTokenSender
     {
         #region Fields
