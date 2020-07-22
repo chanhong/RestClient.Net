@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace RestClient.Net.UnitTests
         private SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
         private Func<DateTime, string> _refreshToken;
         private GetTime _getTime;
-        Action<string> _tokenSentAction;
+        Action<HttpRequestMessage> _beforeSendAction;
         #endregion
 
         #region Public Properties
@@ -26,11 +27,11 @@ namespace RestClient.Net.UnitTests
         #endregion
 
         #region Constructor
-        public ManagedTokenSender(Func<DateTime, string> refreshTokenFunc, Action<string> tokenSentAction, GetTime getTime)
+        public ManagedTokenSender(Func<DateTime, string> refreshTokenFunc, Action<HttpRequestMessage> beforeSendAction, GetTime getTime)
         {
             _getTime = getTime;
             _refreshToken = refreshTokenFunc;
-            _tokenSentAction = tokenSentAction;
+            _beforeSendAction = beforeSendAction;
         }
         #endregion
 
@@ -51,13 +52,11 @@ namespace RestClient.Net.UnitTests
 
                 httpRequestMessage.Headers.Add("Authorization", "Bearer " + BearerToken);
 
-                var response = await httpClient.SendAsync(httpRequestMessage, cancellationToken);
+                _beforeSendAction(httpRequestMessage);
 
-                var authorizationHeaderValue = httpRequestMessage.Headers.ToList().FirstOrDefault(h => h.Key == "Authorization").Value;
+                _semaphoreSlim.Release();
 
-                _tokenSentAction(authorizationHeaderValue.First());
-
-                return response;
+                return await httpClient.SendAsync(httpRequestMessage, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -65,7 +64,6 @@ namespace RestClient.Net.UnitTests
             }
             finally
             {
-                _semaphoreSlim.Release();
             }
         }
         #endregion

@@ -40,10 +40,12 @@ namespace RestClient.Net.UnitTests
 
                 return currentToken;
             },
-            (t) =>
+            (hrm) =>
             {
+                var authorizationHeaderValue = hrm.Headers.ToList().FirstOrDefault(h => h.Key == "Authorization").Value;               
+
                 //Track the tokens that are physically sent
-                SentBearerTokens.Add(t);
+                SentBearerTokens.Add(authorizationHeaderValue.First());
 
                 //Simulate some time being taken
                 Thread.Sleep(10);
