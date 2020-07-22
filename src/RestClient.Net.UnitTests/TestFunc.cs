@@ -1,62 +1,23 @@
-﻿
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RichardSzalay.MockHttp;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 
 #if !NET45
 
 namespace RestClient.Net.UnitTests
 {
-    public delegate DateTime GetTime();
-
-    public class ManagedTokenSender
+    public static class TestValuesHolder
     {
-        #region Fields
-        private string _bearerToken;
-        private DateTime _tokenCreationTime;
-        private SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
-        private Func<DateTime, string> _refreshToken;
-        private GetTime _getTime;
-        #endregion
-
-        #region Constructor
-        public ManagedTokenSender(Func<DateTime, string> refreshTokenFunc, GetTime getTime)
-        {
-            _getTime = getTime;
-            _refreshToken = refreshTokenFunc;
-        }
-        #endregion
-
-        #region Public Methods
-        public async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, Func<HttpRequestMessage> httpRequestMessageFunc, Microsoft.Extensions.Logging.ILogger logger, CancellationToken cancellationToken)
-        {
-            try
-            {
-                await _semaphoreSlim.WaitAsync();
-
-                var newToken = _refreshToken(_tokenCreationTime);
-
-                if (string.Compare(newToken, _bearerToken) != 0) _tokenCreationTime = _getTime();
-
-                var httpRequestMessage = httpRequestMessageFunc.Invoke();
-
-                httpRequestMessage.Headers.Add("Authorization", "Bearer " + _bearerToken);
-
-                return await httpClient.SendAsync(httpRequestMessage, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-            finally
-            {
-                _semaphoreSlim.Release();
-            }
-        }
-        #endregion
+        public static int CallCount = 0;
+        public static DateTime FakeTime = new DateTime(2000, 1, 1);
+        public static List<string> SentBearerTokens = new List<string>();
     }
+
+    public delegate DateTime GetTime();
 
     [TestClass]
     public class TestFunc
@@ -66,23 +27,38 @@ namespace RestClient.Net.UnitTests
         {
             var currentToken = new Guid().ToString();
 
-            var fakeTime = new DateTime(2000, 0, 0);
-
             var managedTokenSender = new ManagedTokenSender((c) =>
             {
-                if (c < DateTime.Now.AddMinutes(-60))
+                if (c < TestValuesHolder.FakeTime.AddMinutes(-60))
                 {
                     currentToken = Guid.NewGuid().ToString();
                 }
 
                 return currentToken;
-            }, () => fakeTime);
+            }, () => TestValuesHolder.FakeTime);
 
+            var mockHttpMessageHandler = new MockHttpMessageHandler();
+            const string uri = "http://www.test.com";
 
-            var client = new Client(sendHttpRequestFunc: managedTokenSender.SendAsync);
+            mockHttpMessageHandler.
+            When(HttpMethod.Get, uri)
+            .Respond(
+                new Dictionary<string, string>(),
+                "application/json",
+                File.ReadAllText("JSON/RestCountries.json"));
 
+            CreateHttpClient _createHttpClient = (n) => mockHttpMessageHandler.ToHttpClient();
 
+            var client = new Client(sendHttpRequestFunc: managedTokenSender.SendAsync, createHttpClient: _createHttpClient);
 
+            var tasks = new List<Task>();
+
+            for (var i = 0; i < 61; i++)
+            {
+                tasks.Add(client.GetAsync<string>(new Uri(uri)));
+            }
+
+            await Task.WhenAll(tasks);
         }
     }
 }
