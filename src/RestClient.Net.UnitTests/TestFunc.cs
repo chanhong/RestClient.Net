@@ -12,8 +12,7 @@ namespace RestClient.Net.UnitTests
 {
     public static class TestValuesHolder
     {
-        public static int CallCount = 0;
-        public static DateTime FakeTime = new DateTime(2000, 1, 1);
+        public static DateTime FakeTime { get; set; } = new DateTime(2000, 1, 1);
         public static List<string> SentBearerTokens = new List<string>();
     }
 
@@ -27,11 +26,11 @@ namespace RestClient.Net.UnitTests
         {
             var currentToken = new Guid().ToString();
 
-
             var managedTokenSender = new ManagedTokenSender((c) =>
             {
-                if (c < TestValuesHolder.FakeTime.AddMinutes(-60))
+                if (c <= TestValuesHolder.FakeTime.AddMinutes(-60))
                 {
+                    //The token expired and is being refreshed
                     currentToken = Guid.NewGuid().ToString();
                 }
 
@@ -40,8 +39,9 @@ namespace RestClient.Net.UnitTests
             (t) => 
             {
                 TestValuesHolder.SentBearerTokens.Add(t);
-                TestValuesHolder.CallCount++;
-                if (TestValuesHolder.CallCount >= 60) TestValuesHolder.FakeTime += new TimeSpan(1, 1, 0);
+
+                //Increment fake time by 1 minute
+                TestValuesHolder.FakeTime += new TimeSpan(0, 1, 0);
             },
             () => TestValuesHolder.FakeTime
             );
