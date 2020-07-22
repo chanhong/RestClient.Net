@@ -19,6 +19,10 @@ namespace RestClient.Net.UnitTests
         Action<string> _tokenSentAction;
         #endregion
 
+        #region Public Properties
+        public string BearerToken => _bearerToken;
+        #endregion
+
         #region Constructor
         public ManagedTokenSender(Func<DateTime, string> refreshTokenFunc, Action<string> tokenSentAction, GetTime getTime)
         {
