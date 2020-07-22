@@ -16,14 +16,15 @@ namespace RestClient.Net.UnitTests
         private SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
         private Func<DateTime, string> _refreshToken;
         private GetTime _getTime;
-
+        Action<string> _tokenSentAction;
         #endregion
 
         #region Constructor
-        public ManagedTokenSender(Func<DateTime, string> refreshTokenFunc, GetTime getTime)
+        public ManagedTokenSender(Func<DateTime, string> refreshTokenFunc, Action<string> tokenSentAction, GetTime getTime)
         {
             _getTime = getTime;
             _refreshToken = refreshTokenFunc;
+            _tokenSentAction = tokenSentAction;
         }
         #endregion
 
@@ -46,13 +47,9 @@ namespace RestClient.Net.UnitTests
 
                 var response = await httpClient.SendAsync(httpRequestMessage, cancellationToken);
 
-                TestValuesHolder.CallCount++;
-
                 var authorizationHeaderValue = httpRequestMessage.Headers.ToList().FirstOrDefault(h => h.Key == "Authorization").Value;
 
-                TestValuesHolder.SentBearerTokens.Add(authorizationHeaderValue.First());
-
-                if (TestValuesHolder.CallCount >= 60) TestValuesHolder.FakeTime += new TimeSpan(1, 1, 0);
+                _tokenSentAction(authorizationHeaderValue.First());
 
                 return response;
             }

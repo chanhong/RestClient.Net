@@ -27,6 +27,7 @@ namespace RestClient.Net.UnitTests
         {
             var currentToken = new Guid().ToString();
 
+
             var managedTokenSender = new ManagedTokenSender((c) =>
             {
                 if (c < TestValuesHolder.FakeTime.AddMinutes(-60))
@@ -35,7 +36,15 @@ namespace RestClient.Net.UnitTests
                 }
 
                 return currentToken;
-            }, () => TestValuesHolder.FakeTime);
+            },
+            (t) => 
+            {
+                TestValuesHolder.SentBearerTokens.Add(t);
+                TestValuesHolder.CallCount++;
+                if (TestValuesHolder.CallCount >= 60) TestValuesHolder.FakeTime += new TimeSpan(1, 1, 0);
+            },
+            () => TestValuesHolder.FakeTime
+            );
 
             var mockHttpMessageHandler = new MockHttpMessageHandler();
             const string uri = "http://www.test.com";
