@@ -1519,4 +1519,5 @@ namespace RestClient.Net.UnitTests
         }
         #endregion
     }
+
 }
