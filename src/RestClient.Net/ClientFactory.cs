@@ -11,7 +11,7 @@ namespace RestClient.Net
     public class ClientFactory
     {
         #region Fields
-        private readonly Func<string, Uri?, Lazy<IClient>> createClientFunc;
+        private readonly Func<string, Lazy<IClient>> createClientFunc;
         private readonly ConcurrentDictionary<string, Lazy<IClient>> clients;
         private readonly CreateHttpClient createHttpClient;
         private readonly ILoggerFactory loggerFactory;
@@ -41,13 +41,13 @@ namespace RestClient.Net
 
             clients = new ConcurrentDictionary<string, Lazy<IClient>>();
 
-            createClientFunc = (name, baseUri) => new Lazy<IClient>(() => MintClient(name, baseUri), LazyThreadSafetyMode.ExecutionAndPublication);
+            createClientFunc = (name) => new Lazy<IClient>(() => MintClient(name), LazyThreadSafetyMode.ExecutionAndPublication);
         }
         #endregion
 
         #region Implementation
-        public IClient CreateClient(string name, Uri? baseUri = null)
-            => name == null ? throw new ArgumentNullException(nameof(name)) : clients.GetOrAdd(name, createClientFunc(name, baseUri)).Value;
+        public IClient CreateClient(string name)
+            => name == null ? throw new ArgumentNullException(nameof(name)) : clients.GetOrAdd(name, createClientFunc(name)).Value;
         #endregion
 
         #region Private Methods
