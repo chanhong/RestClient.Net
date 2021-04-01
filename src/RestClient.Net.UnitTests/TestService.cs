@@ -11,8 +11,7 @@ namespace RestClient.Net.UnitTests
         public IClient Client { get; }
 
         public TestService(CreateClient createClient)
-            => Client = createClient != null ? createClient("TestServiceClient",
-               Uri) :
+            => Client = createClient != null ? createClient("TestServiceClient") :
             throw new ArgumentNullException(nameof(createClient));
 
         public async Task<TestThing> GetTestThingAsync() => await Client.GetAsync<TestThing>().ConfigureAwait(false);

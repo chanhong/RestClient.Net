@@ -1774,7 +1774,7 @@ namespace RestClient.Net.UnitTests
         public async Task TestFactoryCreationWithUri()
         {
             var clientFactory = new ClientFactory(GetCreateHttpClient(), new NewtonsoftSerializationAdapter());
-            var client = ClientFactoryExtensions.CreateClient(clientFactory.CreateClient, "test", RestCountriesAllUri);
+            var client = clientFactory.CreateClient("test");
             var response = await client.GetAsync<List<RestCountry>>();
             Assert.IsTrue(response.Body?.Count > 0);
         }
@@ -1788,11 +1788,11 @@ namespace RestClient.Net.UnitTests
                 GetCreateHttpClient(),
                 new NewtonsoftSerializationAdapter());
 
-            var client = (Client)ClientFactoryExtensions.CreateClient(clientFactory.CreateClient, "1", RestCountriesAllUri);
-            var response = await client.GetAsync<List<RestCountry>>();
+            var client = (Client)clientFactory.CreateClient("1");
+            _ = await client.GetAsync<List<RestCountry>>();
 
-            var client2 = (Client)ClientFactoryExtensions.CreateClient(clientFactory.CreateClient, "2", RestCountriesAllUri);
-            response = await client2.GetAsync<List<RestCountry>>();
+            var client2 = (Client)clientFactory.CreateClient("2");
+            _ = await client2.GetAsync<List<RestCountry>>();
 
             Assert.IsNotNull(client.lazyHttpClient.Value);
             var isEqual = ReferenceEquals(client.lazyHttpClient.Value, client2.lazyHttpClient.Value);
@@ -1842,9 +1842,9 @@ namespace RestClient.Net.UnitTests
 
             var clientFactory = new ClientFactory(defaultHttpClientFactory.CreateClient, new NewtonsoftSerializationAdapter());
 
-            var firstClient = ClientFactoryExtensions.CreateClient(clientFactory.CreateClient, "RestClient", RestCountriesAllUri);
+            var firstClient = clientFactory.CreateClient("RestClient");
 
-            var secondClient = ClientFactoryExtensions.CreateClient(clientFactory.CreateClient, "RestClient", RestCountriesAllUri);
+            var secondClient = clientFactory.CreateClient("RestClient");
 
             Assert.IsNotNull(firstClient);
             Assert.IsTrue(ReferenceEquals(firstClient, secondClient));

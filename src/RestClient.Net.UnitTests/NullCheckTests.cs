@@ -143,14 +143,6 @@ namespace RestClient.Net.UnitTests
         }
 
         [TestMethod]
-        public void TestClientFactoryExtensionsCreateClientClient()
-        {
-            var exception = Assert.ThrowsException<ArgumentNullException>(() => _ = ClientFactoryExtensions.CreateClient(default, "Asd"));
-
-            Assert.AreEqual("createClient", exception.ParamName);
-        }
-
-        [TestMethod]
         public void TestHeadersExtensionsAppendHeadersCollection()
         {
             var exception = Assert.ThrowsException<ArgumentNullException>(() =>
