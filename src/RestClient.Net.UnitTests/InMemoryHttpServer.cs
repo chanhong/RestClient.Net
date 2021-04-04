@@ -17,15 +17,25 @@ namespace RestClient.Net.UnitTests
             var outputHtml = "Hi";
             var url = ServerExtensions.GetLocalhostAddress();
 
-            using var server = new HttpServer(url);
-
-            var task = server.ServeAsync(async (context) =>
+            using var server = new HttpServer(url, async (context) =>
             {
-                var writer = new StreamWriter(context.Response.OutputStream);
-                await writer.WriteAsync(outputHtml).ConfigureAwait(false);
-                writer.Close();
+                var served = false;
+
+                while (!served)
+                {
+                    if (context.Request != null)
+                    {
+                        var writer = new StreamWriter(context.Response.OutputStream);
+                        await writer.WriteAsync(outputHtml).ConfigureAwait(false);
+                        writer.Close();
+                        served = true;
+                    }
+
+                    await Task.Delay(1000);
+                }
             });
 
+            await Task.Delay(1000);
 
             using var myhttpclient = new HttpClient() { BaseAddress = new Uri(url) };
 
@@ -39,8 +49,6 @@ namespace RestClient.Net.UnitTests
             // Assert
             Assert.AreEqual(outputHtml, content);
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-
-            await task;
         }
     }
 }
