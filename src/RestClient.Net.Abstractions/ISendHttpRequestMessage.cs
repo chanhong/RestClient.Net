@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace RestClient.Net.Abstractions
 {
-    public interface ISendHttpRequestMessage
+    public interface ISendHttpRequestMessage : IDisposable
     {
         Task<HttpResponseMessage> SendHttpRequestMessage<TRequestBody>(
-            HttpClient httpClient,
             IGetHttpRequestMessage httpRequestMessageFunc,
             IRequest<TRequestBody> request,
             ILogger logger,

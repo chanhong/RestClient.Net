@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using RestClient.Net.Abstractions;
 using RestClient.Net.Abstractions.Extensions;
 using System;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Urls;
@@ -22,10 +21,6 @@ namespace RestClient.Net
     {
         #region Internal Fields
 
-        /// <summary>
-        /// Delegate used for getting or creating HttpClient instances when the SendAsync call is made
-        /// </summary>
-        internal readonly CreateHttpClient createHttpClient;
 
         /// <summary>
         /// Gets the delegate responsible for converting rest requests to http requests
@@ -44,7 +39,6 @@ namespace RestClient.Net
         #region Private Fields
 
 
-        internal readonly Lazy<HttpClient> lazyHttpClient;
 
         private bool disposed;
 
@@ -56,7 +50,6 @@ namespace RestClient.Net
         /// <param name="baseUri">The base Url for the client. Specify this if the client will be used for one Url only. This should be an absolute Uri</param>
         /// <param name="defaultRequestHeaders">Default headers to be sent with http requests</param>
         /// <param name="logger">Logging abstraction that will trace request/response data and log events</param>
-        /// <param name="createHttpClient">The delegate that is used for getting or creating HttpClient instances when the SendAsync call is made</param>
         /// <param name="sendHttpRequest">The service responsible for performing the SendAsync method on HttpClient. This can replaced in the constructor in order to implement retries and so on.</param>
         /// <param name="getHttpRequestMessage">Service responsible for converting rest requests to http requests</param>
         /// <param name="timeout">Amount of time a request should wait before timing out</param>
@@ -72,7 +65,6 @@ namespace RestClient.Net
 #endif
         IHeadersCollection? defaultRequestHeaders = null,
         ILogger<Client>? logger = null,
-        CreateHttpClient? createHttpClient = null,
         ISendHttpRequestMessage? sendHttpRequest = null,
         IGetHttpRequestMessage? getHttpRequestMessage = null,
         bool throwExceptionOnFailure = true,
@@ -81,7 +73,6 @@ namespace RestClient.Net
             baseUrl.ToAbsoluteUrl(),
             defaultRequestHeaders,
             logger,
-            createHttpClient,
             sendHttpRequest,
             getHttpRequestMessage,
             throwExceptionOnFailure,
@@ -108,7 +99,6 @@ namespace RestClient.Net
 #endif
         IHeadersCollection? defaultRequestHeaders = null,
         ILogger<Client>? logger = null,
-        CreateHttpClient? createHttpClient = null,
         ISendHttpRequestMessage? sendHttpRequest = null,
         IGetHttpRequestMessage? getHttpRequestMessage = null,
         bool throwExceptionOnFailure = true,
@@ -117,7 +107,6 @@ namespace RestClient.Net
             baseUri,
             defaultRequestHeaders,
             logger,
-            createHttpClient,
             sendHttpRequest,
             getHttpRequestMessage,
             throwExceptionOnFailure,
@@ -144,7 +133,6 @@ namespace RestClient.Net
         AbsoluteUrl? baseUri = null,
         IHeadersCollection? defaultRequestHeaders = null,
         ILogger<Client>? logger = null,
-        CreateHttpClient? createHttpClient = null,
         ISendHttpRequestMessage? sendHttpRequest = null,
         IGetHttpRequestMessage? getHttpRequestMessage = null,
         bool throwExceptionOnFailure = true,
@@ -171,15 +159,13 @@ namespace RestClient.Net
 
             BaseUrl = baseUri ?? AbsoluteUrl.Empty;
 
+            //TODO: Whoa, is this OK?
             Name = name ?? Guid.NewGuid().ToString();
 
             this.getHttpRequestMessage = getHttpRequestMessage ?? DefaultGetHttpRequestMessage.Instance;
 
-            this.createHttpClient = createHttpClient ?? new CreateHttpClient((n) => new HttpClient());
 
-            lazyHttpClient = new Lazy<HttpClient>(() => this.createHttpClient(Name));
-
-            sendHttpRequestMessage = sendHttpRequest ?? DefaultSendHttpRequestMessage.Instance;
+            sendHttpRequestMessage = sendHttpRequest ?? new DefaultSendHttpRequestMessage(Name);
 
             ThrowExceptionOnFailure = throwExceptionOnFailure;
         }
@@ -223,7 +209,7 @@ namespace RestClient.Net
 
             disposed = true;
 
-            lazyHttpClient.Value?.Dispose();
+            sendHttpRequestMessage.Dispose();
         }
 
         public async Task<Response<TResponseBody>> SendAsync<TResponseBody, TRequestBody>(IRequest<TRequestBody> request)
@@ -234,27 +220,12 @@ namespace RestClient.Net
 
             try
             {
-                var httpClient = lazyHttpClient.Value ?? throw new InvalidOperationException("createHttpClient returned null");
-
                 //Validate these on every call because they could change any time
-
-                if (httpClient.BaseAddress != null)
-                {
-                    throw new InvalidOperationException($"createHttpClient returned a {nameof(HttpClient)} with a {nameof(HttpClient.BaseAddress)}. The {nameof(HttpClient)} must never have a {nameof(HttpClient.BaseAddress)}. Fix the createHttpClient func so that it never creates a {nameof(HttpClient)} with {nameof(HttpClient.BaseAddress)}");
-                }
-
-                if (httpClient.DefaultRequestHeaders.Any())
-                {
-                    throw new InvalidOperationException($"createHttpClient returned a {nameof(HttpClient)} with at least one item in {nameof(HttpClient.DefaultRequestHeaders)}. The {nameof(HttpClient)} must never have {nameof(HttpClient.DefaultRequestHeaders)}. Fix the createHttpClient func so that it never creates a {nameof(HttpClient)} with {nameof(HttpClient.DefaultRequestHeaders)}");
-                }
-
-                logger.LogTrace(Messages.TraceBeginSend, request, TraceEvent.Request, lazyHttpClient.Value, SerializationAdapter, (object?)request.BodyData ?? "");
 
                 //Note: we do not simply get the HttpRequestMessage here. If we use something like Polly, we may need to send it several times, and you cannot send the same message multiple times
                 //This is why we must compose the send func with getHttpRequestMessage
 
                 httpResponseMessage = await sendHttpRequestMessage.SendHttpRequestMessage(
-                    lazyHttpClient.Value,
                     getHttpRequestMessage,
                     request,
                     logger,

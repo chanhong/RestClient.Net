@@ -5,20 +5,36 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
+#pragma warning disable CA1063 // Implement IDisposable Correctly
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
+
 namespace RestClient.Net
 {
-    public class DefaultSendHttpRequestMessage : ISendHttpRequestMessage
+    public class DefaultSendHttpRequestMessage : ISendHttpRequestMessage, IDisposable
     {
-        public static DefaultSendHttpRequestMessage Instance { get; } = new DefaultSendHttpRequestMessage();
+        //public static DefaultSendHttpRequestMessage Instance { get; } = new DefaultSendHttpRequestMessage();
 
+        internal readonly Lazy<HttpClient> lazyHttpClient;
+        /// <summary>
+        /// Delegate used for getting or creating HttpClient instances when the SendAsync call is made
+        /// </summary>
+        internal readonly CreateHttpClient createHttpClient;
+
+        public DefaultSendHttpRequestMessage(string name, CreateHttpClient? createHttpClient = null)
+
+        {
+            this.createHttpClient = createHttpClient ?? new CreateHttpClient((n) => new HttpClient());
+            lazyHttpClient = new Lazy<HttpClient>(() => this.createHttpClient(name));
+
+        }
+
+        public void Dispose() => lazyHttpClient.Value?.Dispose();
         public async Task<HttpResponseMessage> SendHttpRequestMessage<TRequestBody>(
-            HttpClient httpClient,
             IGetHttpRequestMessage httpRequestMessageFunc,
             IRequest<TRequestBody> request,
             ILogger logger,
             ISerializationAdapter serializationAdapter)
         {
-            if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
             if (httpRequestMessageFunc == null) throw new ArgumentNullException(nameof(httpRequestMessageFunc));
             if (request == default) throw new ArgumentNullException(nameof(request));
 
@@ -30,7 +46,7 @@ namespace RestClient.Net
 
                 logger.LogTrace(Messages.InfoAttemptingToSend, request);
 
-                var httpResponseMessage = await httpClient.SendAsync(httpRequestMessage, request.CancellationToken).ConfigureAwait(false);
+                var httpResponseMessage = await lazyHttpClient.Value.SendAsync(httpRequestMessage, request.CancellationToken).ConfigureAwait(false);
 
                 logger.LogInformation(Messages.InfoSendReturnedNoException);
 
