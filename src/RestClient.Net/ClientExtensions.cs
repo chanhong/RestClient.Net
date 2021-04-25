@@ -82,22 +82,6 @@ namespace RestClient.Net
         /// <summary>
         /// Clones the client With a change
         /// </summary>
-        public static Client With(this Client client, CreateHttpClient createHttpClient)
-            =>
-                client != null ? new Client(
-                    client.SerializationAdapter,
-                    client.BaseUrl,
-                    client.DefaultRequestHeaders,
-                    client.logger is ILogger<Client> logger ? logger : null,
-                    createHttpClient,
-                    client.sendHttpRequestMessage,
-                    client.getHttpRequestMessage,
-                    client.ThrowExceptionOnFailure,
-                    client.Name) : throw new ArgumentNullException(nameof(client));
-
-        /// <summary>
-        /// Clones the client With a change
-        /// </summary>
         public static Client With(this Client client, IGetHttpRequestMessage getHttpRequestMessage)
             =>
                 client != null ? new Client(

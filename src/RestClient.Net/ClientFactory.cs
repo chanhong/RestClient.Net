@@ -53,7 +53,6 @@ namespace RestClient.Net
                 createClientOptions.BaseUrl,
                 createClientOptions.HeadersCollection,
                 loggerFactory?.CreateLogger<Client>(),
-                createClientOptions.CreateHttpClient,
                 createClientOptions.SendHttpRequestMessage,
                 createClientOptions.GetHttpRequestMessage,
                 createClientOptions.ThrowsExceptionOnFailure,

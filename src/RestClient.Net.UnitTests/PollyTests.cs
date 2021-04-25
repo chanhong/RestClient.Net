@@ -17,6 +17,9 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Urls;
 
+#pragma warning disable CA1063 // Implement IDisposable Correctly
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
+
 namespace RestClient.Net.UnitTests
 {
     //It sucks that we have to create a class in this way. The old version was far less verbose. 
@@ -30,8 +33,9 @@ namespace RestClient.Net.UnitTests
 
         public int Tries { get; private set; }
 
+        public void Dispose() { }
+
         public Task<HttpResponseMessage> SendHttpRequestMessage<TRequestBody>(
-            HttpClient httpClient,
             IGetHttpRequestMessage httpRequestMessageFunc,
             IRequest<TRequestBody> request,
             ILogger logger,
@@ -39,8 +43,9 @@ namespace RestClient.Net.UnitTests
             policy.ExecuteAsync(() =>
             {
                 if (httpRequestMessageFunc == null) throw new ArgumentNullException(nameof(httpRequestMessageFunc));
-                if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
                 if (request == null) throw new ArgumentNullException(nameof(request));
+
+                var httpClient = new HttpClient();
 
                 var httpRequestMessage = httpRequestMessageFunc.GetHttpRequestMessage(request, logger, serializationAdapter);
 
@@ -69,13 +74,12 @@ namespace RestClient.Net.UnitTests
               .OrResult(response => response.StatusCode == HttpStatusCode.NotFound)
               .RetryAsync(3);
 
-            var sendHttpRequestFunc = new PollySendHttpRequestMessage(policy);
+            using var sendHttpRequestFunc = new PollySendHttpRequestMessage(policy);
 
             using var client = new Client(
                 new ProtobufSerializationAdapter(),
                 new(MainUnitTests.LocalBaseUriString),
                 logger: null,
-                createHttpClient: MainUnitTests.GetTestClientFactory().CreateClient,
                 sendHttpRequest: sendHttpRequestFunc,
                 name: null);
 

@@ -284,9 +284,8 @@ namespace RestClient.Net.UnitTests
         {
             var baseUri = new AbsoluteUrl(GoogleUrlString);
             using var client = new Client(
-                serializationAdapter: new NewtonsoftSerializationAdapter(),
-                createHttpClient: GetCreateHttpClient()
-                );
+                new NewtonsoftSerializationAdapter(),
+                sendHttpRequest: new DefaultSendHttpRequestMessage("asd", GetCreateHttpClient()));
 
             var response = await client.SendAsync<string, object>(new Request<object>(
                 baseUri,
