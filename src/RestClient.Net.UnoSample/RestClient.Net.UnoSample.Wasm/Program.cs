@@ -1,10 +1,16 @@
-﻿namespace RestClient.Net.UnoSample.Wasm
+﻿
+#nullable enable
+
+#pragma warning disable IDE0052 // Remove unread private members
+
+
+namespace RestClient.Net.UnoSample.Wasm
 {
     public class Program
     {
-        private static App _app;
+        private static App? _app;
 
-        private static int Main(string[] args)
+        private static int Main()
         {
             Windows.UI.Xaml.Application.Start(_ => _app = new App());
 

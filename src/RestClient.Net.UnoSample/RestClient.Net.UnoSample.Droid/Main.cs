@@ -15,13 +15,10 @@ namespace RestClient.Net.UnoSample.Droid
 	)]
 	public class Application : Windows.UI.Xaml.NativeApplication
 	{
-		public Application(IntPtr javaReference, JniHandleOwnership transfer)
-			: base(() => new App(), javaReference, transfer)
-		{
-			ConfigureUniversalImageLoader();
-		}
+        public Application(IntPtr javaReference, JniHandleOwnership transfer)
+            : base(() => new App(), javaReference, transfer) => ConfigureUniversalImageLoader();
 
-		private void ConfigureUniversalImageLoader()
+        private void ConfigureUniversalImageLoader()
 		{
 			// Create global configuration and initialize ImageLoader with this config
 			ImageLoaderConfiguration config = new ImageLoaderConfiguration

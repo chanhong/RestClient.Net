@@ -1,5 +1,6 @@
 ﻿
 #pragma warning disable CA1010 // Generic interface should also be implemented
+#pragma warning disable CA1501 // Generic interface should also be implemented
 
 using Windows.UI.Xaml.Controls;
 
@@ -12,9 +13,6 @@ namespace RestClient.Net.UnoSample
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        public MainPage()
-        {
-            InitializeComponent();
-        }
+        public MainPage() => InitializeComponent();
     }
 }
