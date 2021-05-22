@@ -1,4 +1,7 @@
-﻿using Windows.UI.Xaml.Controls;
+﻿
+#pragma warning disable CA1010 // Generic interface should also be implemented
+
+using Windows.UI.Xaml.Controls;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
