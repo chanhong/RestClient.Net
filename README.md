@@ -2,7 +2,9 @@
 
 # .NET REST Client Framework for all platforms #
 
-The best .NET REST API Client with task-based async, strong types, and dependency injection on all platforms. Consume your ASP .NET Core Web APIs or consume RESTful APIs over the internet in C#, F#, or Visual Basic. It's designed for functional-style programming with F# in mind.
+[![buildandtest](https://github.com/MelbourneDeveloper/RestClient.Net/actions/workflows/buildandtest.yml/badge.svg)](https://github.com/MelbourneDeveloper/RestClient.Net/actions/workflows/buildandtest.yml)
+
+RestClient.Net is a powerful .NET REST API client that features task-based async, strong types, and dependency injection support for all platforms. Use it to consume ASP.NET Core Web APIs or interact with RESTful APIs over the internet in C#, F#, or Visual Basic. It's designed with functional-style programming and F# in mind.
 
 NuGet: [RestClient.Net](https://www.nuget.org/packages/RestClient.Net)
 
@@ -10,26 +12,27 @@ NuGet: [RestClient.Net](https://www.nuget.org/packages/RestClient.Net)
 
 [![.NET](https://github.com/MelbourneDeveloper/RestClient.Net/actions/workflows/dotnet.yml/badge.svg?branch=5%2Fdevelop)](https://github.com/MelbourneDeveloper/RestClient.Net/actions/workflows/dotnet.yml)
 
-## 5.0 Release
+## 6.0 Release
 
-5.0 brings a Fluent API, immutable types, lots of useful extension methods, and thorough unit testing. Check out [the tests](https://github.com/MelbourneDeveloper/RestClient.Net/blob/98560ee7f7470218f80e7416f2e8e9c60bfab759/src/RestClient.Net.UnitTests/MainUnitTests.cs#L290) for code examples.
+This release updates all dependencies and targets major versions of .NET: 4.5, 5, 6, and 7.
 
 ### [Follow Me on Twitter for Updates](https://twitter.com/intent/follow?screen_name=cfdevelop&tw_p=followbutton) ##
 
-### Why You Should Use It ###
 
-* Treats Urls as first-class citizens with [Urls](https://github.com/MelbourneDeveloper/Urls). URLs are immutable [records](https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/records) and have a fluent API for construction.
-* Designed for Dependency Injection. Mock your REST calls and add RestClient.Net to your IoC container with one line of code
-* Async friendly. All operations use async, await keywords
-* Automatic request/response body serialization to/from strong types (JSON, Binary, SOAP, [Google Protocol Buffers](https://developers.google.com/protocol-buffers))
-  * The library is decoupled from Newtsonsoft so that you can use any serialization method or version of Newtonsoft. This means that you can use it with any version of Azure Functions.
-* Install from NuGet on any platform from .NET Framework 4.5 up to .NET 5. Supports Xamarin (Mono, iOS, Android), UWP, [WebAssembly](https://github.com/MelbourneDeveloper/RestClient.Net/wiki/Web-Assembly-Support) and Unity with .NET Standard 2.0
-* Supports GET, POST, PUT, PATCH, DELETE with ability and custom methods
-* Tight code and complete test coverage means you can make a change if you need to
+### Key Features
+
+* **First-class URLs**: Utilizes [Urls](https://github.com/MelbourneDeveloper/Urls) to treat URLs as immutable [records](https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/records) with a fluent API for construction.
+* **Dependency Injection Support**: Easily mock REST calls and add RestClient.Net to your IoC container with a single line of code.
+* **Async-Friendly**: All operations use async and await keywords.
+* **Automatic Serialization**: Automatically serializes request/response bodies to/from strong types (JSON, Binary, SOAP, [Google Protocol Buffers](https://developers.google.com/protocol-buffers)). The library is decoupled from Newtonsoft, allowing you to use any serialization method or version of Newtonsoft. This means compatibility with any version of Azure Functions.
+* **Cross-Platform Compatibility**: Install from NuGet on any platform from .NET Framework 4.5 up to .NET 5. Supports Xamarin (Mono, iOS, Android), UWP, [WebAssembly](https://github.com/MelbourneDeveloper/RestClient.Net/wiki/Web-Assembly-Support), and Unity with .NET Standard 2.0.
+* **HTTP Methods**: Supports GET, POST, PUT, PATCH, DELETE, and custom methods.
+* **Fluent API**: Provides a fluent API for construction, non-destructive mutation, and URL construction.
+* **Logging**: Uses .NET Core Logging - [`ILogger`](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-5.0) for logging all aspects of HTTP calls.
+* **Thread Safety**: Immutable client for thread safety.
+* **High-Quality Code**: Tight code and complete test coverage allow you to make changes if needed.
+
 ![diagram](https://github.com/MelbourneDeveloper/Restclient.Net/blob/main/src/Images/Rendered/Stats.png) 
-* Fluent API for construction, non-destructive mutation, and Url construction
-* Uses [.NET Core Logging - `ILogger`](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-5.0) to allow logging of all aspects of HTTP calls
-
 ## Examples
 
 For a complete set of examples, see these [unit tests](https://github.com/MelbourneDeveloper/RestClient.Net/blob/3574038f02a83a299f9536b71c7f839ae72e0e08/src/RestClient.Net.UnitTests/MainUnitTests.cs#L279).
@@ -149,13 +152,5 @@ member this.TestComposition () =
 
     Assert.AreEqual("http://username:password@host.com:5000/pathpart1/pathpart2?fieldname1=field%3C%3EValue1&FieldName2=field%3C%3EValue2#frag",uri.ToString());
 ```
-
-
-## Donate
-
-| Coin           | Address |
-| -------------  |:-------------:|
-| Bitcoin        | [33LrG1p81kdzNUHoCnsYGj6EHRprTKWu3U](https://www.blockchain.com/btc/address/33LrG1p81kdzNUHoCnsYGj6EHRprTKWu3U) |
-| Ethereum       | [0x7ba0ea9975ac0efb5319886a287dcf5eecd3038e](https://etherdonation.com/d?to=0x7ba0ea9975ac0efb5319886a287dcf5eecd3038e) |
 
 ## [Contribution](https://github.com/MelbourneDeveloper/RestClient.Net/blob/master/CONTRIBUTING.md)

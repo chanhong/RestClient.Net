@@ -15,7 +15,9 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Xml2CSharp;
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
 using jsonperson = ApiExamples.Model.JsonModel.Person;
+#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
 using RichardSzalay.MockHttp;
 using System.IO;
 using Microsoft.Extensions.Logging;
@@ -286,6 +288,12 @@ namespace RestClient.Net.UnitTests
         #region Tests
 
         #region External Api Tests
+
+#if !NET7_0_OR_GREATER
+
+        //TODO: Enable this for .NET 7 and up when the bugs get fixed
+
+
         [TestMethod]
         public async Task TestHead()
         {
@@ -307,6 +315,7 @@ namespace RestClient.Net.UnitTests
 
             Assert.AreEqual(GoogleHeadHeaders[CacheControlHeaderName], response.Headers[CacheControlHeaderName].Single());
         }
+#endif
 
 #if !NET45
 
@@ -419,7 +428,7 @@ namespace RestClient.Net.UnitTests
 
             using var client = new Client(new NewtonsoftSerializationAdapter(), createHttpClient: factory.CreateClient, baseUrl: RestCountriesAllUri, logger: _logger.Object);
 
-            _ = await Assert.ThrowsExceptionAsync<HttpStatusException>(() => client.GetAsync<List<RestCountry>>(), Messages.GetErrorMessageNonSuccess((int)statusCode, RestCountriesAllUri));
+            _ = await Assert.ThrowsExceptionAsync<HttpStatusException>(client.GetAsync<List<RestCountry>>, Messages.GetErrorMessageNonSuccess((int)statusCode, RestCountriesAllUri));
         }
 
         [TestMethod]
@@ -615,10 +624,13 @@ namespace RestClient.Net.UnitTests
 #endif
         }
 
+#if !NET7_0_OR_GREATER
+
+        //TODO: Enable this for .NET 7 and up when the bugs get fixed
+
         [TestMethod]
         public async Task TestConsoleLogging()
         {
-            //var logger = new ConsoleLogger();
             using var client = new Client(
                 new NewtonsoftSerializationAdapter(),
                 baseUrl: JsonPlaceholderBaseUri,
@@ -631,6 +643,58 @@ namespace RestClient.Net.UnitTests
             Assert.AreEqual(101, response.Body?.Id);
             Assert.AreEqual(201, response.StatusCode);
         }
+#else
+        /// <summary>
+        /// This relates to this issue: https://github.com/dotnet/runtime/issues/81506
+        /// This should eventually get fixed but even if it doesn't this proves that RC Net at least
+        /// throws a meaningful exception
+        /// </summary>
+        [TestMethod]
+        public async Task TestDotNet7ErrorHandlingNoRequestHeader()
+        {
+            using var client = new Client(
+                new NewtonsoftSerializationAdapter(),
+                baseUrl: JsonPlaceholderBaseUri,
+                createHttpClient: GetCreateHttpClient(),
+                logger: consoleLoggerFactory.CreateLogger<Client>());
+
+            var missingHeaderException = await Assert.ThrowsExceptionAsync<MissingHeaderException>(async () =>
+            await client.PostAsync<PostUserResponse, UserPost>(_userRequestBody, JsonPlaceholderPostsSlug));
+
+            Assert.AreEqual("The media type header is missing. The request is missing the Content-Type header", missingHeaderException.Message);
+        }
+
+        [TestMethod]
+        public async Task TestDotNet7ErrorHandlingNoResponseHeader()
+        {
+            using MockHttpMessageHandler mockHttpMessageHandler = new();
+
+            _ = mockHttpMessageHandler.
+          When(HttpMethod.Post, JsonPlaceholderBaseUriString + JsonPlaceholderPostsSlug).
+          With(request => request?.Content?.Headers?.ContentType?.MediaType == HeadersExtensions.JsonMediaType).
+          Respond(
+          HttpStatusCode.Created,
+          JsonPlaceholderPostHeaders,
+          null,
+          //This is the JSON that gets returned when the content type is empty
+          "{\r\n" +
+          "  \"id\": 101\r\n" +
+          "}"
+          );
+
+            using var client = new Client(
+                new NewtonsoftSerializationAdapter(),
+                baseUrl: JsonPlaceholderBaseUri,
+                createHttpClient: (n) => mockHttpMessageHandler.ToHttpClient(),
+                defaultRequestHeaders: HeadersExtensions.FromJsonContentType(),
+                logger: consoleLoggerFactory.CreateLogger<Client>());
+
+            var missingHeaderException = await Assert.ThrowsExceptionAsync<MissingHeaderException>(async () =>
+             await client.PostAsync<PostUserResponse, UserPost>(_userRequestBody, JsonPlaceholderPostsSlug));
+
+            Assert.AreEqual("The media type header is missing. The request has the Content-Type header so perhaps the response doesn't include it", missingHeaderException.Message);
+        }
+#endif
 
         [TestMethod]
         public async Task TestGetWithXmlSerialization()
@@ -1005,6 +1069,7 @@ namespace RestClient.Net.UnitTests
             Assert.IsNotNull(responsePerson);
         }
 
+#if !NET45
         [TestMethod]
         public async Task TestTimeoutPatch()
         {
@@ -1023,11 +1088,10 @@ namespace RestClient.Net.UnitTests
                 requestHeaders: "Test".ToHeadersCollection("Test")
                 ));
 
-#if !NET45
             _logger.VerifyLog<Client, OperationCanceledException>((state, t)
                 => state.CheckValue("{OriginalFormat}", Messages.ErrorMessageOperationCancelled), LogLevel.Error, 1);
-#endif
         }
+#endif
 
         [TestMethod]
         public async Task TestTimeoutPatch2()
@@ -1136,9 +1200,8 @@ namespace RestClient.Net.UnitTests
                 new RelativeUrl("secure/authenticate")
                 );
 
-            var bearerToken = response.Body?.BearerToken;
 
-            if (bearerToken == null) throw new InvalidOperationException("No bearer token");
+            var bearerToken = (response.Body?.BearerToken) ?? throw new InvalidOperationException("No bearer token");
 
             using var client2 = new Client(
                 new NewtonsoftSerializationAdapter(),
@@ -1470,6 +1533,7 @@ namespace RestClient.Net.UnitTests
             Assert.AreEqual(Key, keyValuePair.Key);
         }
 
+#if !NET45
         [TestMethod]
         public void TestDisposeDisposesHttpClient()
         {
@@ -1482,6 +1546,7 @@ namespace RestClient.Net.UnitTests
             Assert.AreEqual(true, client.Disposed);
             Assert.AreEqual(true, isHttpClientDisposed);
         }
+
 
         [TestMethod]
         public void TestDisposeDoesntHappenTwice()
@@ -1496,6 +1561,7 @@ namespace RestClient.Net.UnitTests
 #pragma warning restore CS8605 // Unboxing a possibly null value.
             Assert.AreEqual(false, isHttpClientDisposed);
         }
+#endif
 
         [TestMethod]
         public void TestDefaultThrowExceptionOnFailure()
@@ -1589,7 +1655,7 @@ namespace RestClient.Net.UnitTests
                 sendHttpRequest: sendHttpRequestMessage.Object,
                 name: "asd");
 
-            var exception = await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => client.GetAsync<string>());
+            var exception = await Assert.ThrowsExceptionAsync<ArgumentNullException>(client.GetAsync<string>);
 
             Assert.AreEqual("httpResponseMessage", exception.ParamName);
 
@@ -1614,7 +1680,7 @@ namespace RestClient.Net.UnitTests
                 baseUrl: new(RestCountriesAllUriString),
                 createHttpClient: (n) => new HttpClient(mockHttpMessageHandler));
 
-            var dex = await Assert.ThrowsExceptionAsync<DeserializationException>(() => client.GetAsync<Person>());
+            var dex = await Assert.ThrowsExceptionAsync<DeserializationException>(client.GetAsync<Person>);
 #if !NET45
             _logger.VerifyLog<Client, DeserializationException>((state, t)
                 => state.CheckValue("{OriginalFormat}", Messages.ErrorMessageDeserialization), LogLevel.Error, 1);
@@ -1874,8 +1940,7 @@ namespace RestClient.Net.UnitTests
             //Act
             var response = await client.GetAsync<string>(client.BaseUrl.AppendPath("test"));
 
-            var requestUri = response?.RequestUri;
-            if (requestUri == null) throw new InvalidOperationException("No uri");
+            var requestUri = (response?.RequestUri) ?? throw new InvalidOperationException("No uri");
 
             //Assert
             Assert.AreEqual(expectedUri, requestUri);

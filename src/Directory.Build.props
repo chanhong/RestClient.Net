@@ -15,9 +15,9 @@
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 		<RunAnalyzers>true</RunAnalyzers>
 		<Nullable>enable</Nullable>
-        <Version>5.1.0</Version>
-		<AssemblyVersion>5.1.0.0</AssemblyVersion>
-		<FileVersion>5.1.0.0</FileVersion>
+        <Version>6.0.0</Version>
+		<AssemblyVersion>6.0.0.0</AssemblyVersion>
+		<FileVersion>6.0.0.0</FileVersion>
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
 	    <Authors>Christian Findlay</Authors>
@@ -29,7 +29,7 @@
 	    <PackageProjectUrl>www.rest-client.net</PackageProjectUrl>
 	    <RepositoryUrl>https://github.com/MelbourneDeveloper/RestClient.Net</RepositoryUrl>
 	    <PackageTags>RESTClient, Client, C#, UWP, REST, .Net Core, Task-based, async, JSON, SOAP, XML, http, Android, iOS, dependency injection, IHttpClientFactory</PackageTags>
-	    <PackageReleaseNotes>Version 5 brings a Fluent API, better Url construction, more stability, and immutable types. There will be minor breaking changes from Version 4.</PackageReleaseNotes>
+	    <PackageReleaseNotes>Version 6 updates all dependencies and targets major versions of .NET: 4.5, 5, 6, and 7.</PackageReleaseNotes>
 	    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     </PropertyGroup>
 	<ItemGroup>
